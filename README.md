@@ -1,178 +1,226 @@
-# 简单论坛系统 - 精简版
+# Simple Forum - AWS Serverless Application
 
-基于 AWS Lambda、API Gateway、DynamoDB 和 S3 的最简无服务器论坛系统。
+A full-featured forum application built with AWS serverless technologies including Lambda, API Gateway, DynamoDB, and S3.
 
-## 特点
+## Features
 
-✅ 无需任何认证系统  
-✅ 最小化资源使用  
-✅ 适合 AWS 免费试用  
-✅ 简单易部署  
+✅ **Complete CRUD Operations** - Create, Read, Update, Delete posts and comments  
+✅ **Modern Architecture** - Fully serverless with auto-scaling  
+✅ **Cost Effective** - Leverages AWS Free Tier  
+✅ **Easy Deployment** - Automated with Terraform and scripts  
+✅ **Cross-Origin Support** - Properly configured CORS for web applications  
 
-## 技术栈
+## Tech Stack
 
-| 组件 | 技术 |
-|------|------|
-| 前端 | HTML5 + JavaScript |
-| 后端 | AWS Lambda (Node.js 18.x) |
+| Component | Technology |
+|-----------|------------|
+| Frontend | HTML5 + Vanilla JavaScript |
+| Backend | AWS Lambda (Node.js 18.x) |
 | API | API Gateway HTTP API |
-| 数据库 | DynamoDB |
-| 存储 | S3 |
-| 基础设施 | Terraform |
+| Database | DynamoDB |
+| Storage | S3 Static Website |
+| Infrastructure | Terraform |
+| SDK | AWS SDK v3 for JavaScript |
 
-## 架构
+## Architecture
 
 ```
-用户 → S3 静态网站 → API Gateway → Lambda → DynamoDB
+Users → S3 Static Website → API Gateway → Lambda Functions → DynamoDB
+                                   ↓
+                            CORS Enabled
 ```
 
-## 项目结构
+## Project Structure
 
 ```
 simple-forum/
-├── terraform/              # Terraform配置
-│   ├── provider.tf        # AWS Provider
-│   ├── variables.tf       # 变量
-│   ├── dynamodb.tf        # DynamoDB表
-│   ├── s3.tf              # S3桶
-│   ├── iam.tf             # IAM角色
-│   ├── lambda.tf          # Lambda函数
-│   ├── api-gateway.tf     # API Gateway
-│   └── outputs.tf         # 输出
-├── lambda-functions/      # Lambda函数代码
-│   ├── posts/            # 帖子功能
-│   └── comments/         # 评论功能
-├── s3-website/           # 前端网站
-│   ├── index.html
-│   └── js/app.js
-├── README.md
-└── package.json
+├── terraform/              # Infrastructure as Code
+│   ├── provider.tf        # AWS Provider configuration
+│   ├── variables.tf       # Input variables
+│   ├── dynamodb.tf        # DynamoDB tables setup
+│   ├── s3.tf              # S3 bucket configuration
+│   ├── iam.tf             # IAM roles and policies
+│   ├── lambda.tf          # Lambda functions deployment
+│   ├── api-gateway.tf     # API Gateway routing
+│   └── outputs.tf         # Terraform outputs
+├── lambda-functions/      # Lambda function source code
+│   ├── posts/            # Posts management (CRUD)
+│   │   └── index.js      # Main handler with AWS SDK v3
+│   └── comments/         # Comments management
+│       └── index.js      # Comment operations
+├── s3-website/           # Frontend application
+│   ├── index.html        # Main HTML page with styling
+│   └── js/app.js         # Client-side JavaScript
+├── scripts/              # Automation scripts
+│   ├── deploy.sh         # Full deployment script
+│   ├── package-lambda.sh # Lambda packaging utility
+│   └── upload-website.sh # Website deployment to S3
+├── README.md             # This file
+└── package.json          # Project metadata
 ```
 
-## 部署步骤
+## Quick Start
 
-### 1. 配置 AWS CLI
+### Prerequisites
+
+- AWS CLI configured with appropriate credentials
+- Terraform installed (v1.0+)
+- Node.js 18.x or later
+
+### 1. Configure AWS Credentials
 
 ```bash
 aws configure
 ```
 
-输入你的 AWS Access Key、Secret Key、Region（建议使用 `us-east-1`）
+Set your region to `ap-east-1` (Hong Kong) or your preferred region.
 
-### 2. 初始化 Terraform
+### 2. Deploy Infrastructure
 
 ```bash
+# Initialize Terraform
 cd terraform
 terraform init
-```
 
-### 3. 部署基础设施
-
-```bash
+# Deploy all resources
 terraform apply
 ```
 
-输入 `yes` 确认部署
+Type `yes` when prompted to confirm deployment.
 
-### 4. 打包 Lambda 函数
-
-```bash
-cd lambda-functions/posts
-zip -r ../../posts.zip *
-cd ../comments
-zip -r ../../comments.zip *
-```
-
-### 5. 重新部署 Lambda
+### 3. Deploy Application
 
 ```bash
-cd terraform
-terraform apply
+# Package and deploy Lambda functions
+cd ..
+./scripts/deploy.sh
 ```
 
-### 6. 获取输出信息
+This script will:
+- Package both Lambda functions
+- Upload frontend to S3
+- Display the website URL
 
+### 4. Access Your Forum
+
+Open the website URL shown in the deployment output in your browser.
+
+## API Endpoints
+
+| Method | Path | Description |
+|--------|------|-------------|
+| GET | `/posts` | Retrieve all posts |
+| POST | `/posts` | Create a new post |
+| DELETE | `/posts/{postId}` | Delete a specific post |
+| GET | `/comments/{postId}` | Get comments for a post |
+| POST | `/comments` | Create a new comment |
+
+## Available Scripts
+
+### `scripts/deploy.sh`
+Full deployment automation:
 ```bash
-terraform output
+./scripts/deploy.sh
 ```
 
-记下 `website_url` 和 `api_endpoint`
-
-### 7. 更新前端 API 地址
-
-编辑 `s3-website/js/app.js`，将 `YOUR_API_GATEWAY_URL` 替换为实际的 API 端点：
-
-```javascript
-const API_URL = 'https://xxxxxxxxxx.execute-api.us-east-1.amazonaws.com';
-```
-
-### 8. 上传前端到 S3
-
+### `scripts/package-lambda.sh`
+Package Lambda functions for deployment:
 ```bash
-aws s3 sync s3-website/ s3://YOUR_BUCKET_NAME --delete
+./scripts/package-lambda.sh
 ```
 
-桶名称可以从 Terraform 输出中获取
+### `scripts/upload-website.sh`
+Upload frontend to S3 (requires bucket name):
+```bash
+./scripts/upload-website.sh <bucket-name>
+```
 
-### 9. 访问论坛
+## Current Features
 
-在浏览器中打开 Terraform 输出的 `website_url`
+### Post Management
+- ✅ Create new posts with title, content, and author
+- ✅ View all posts with timestamps
+- ✅ Delete any post with confirmation
+- ✅ Responsive design for all devices
 
-## API 端点
+### Comment System
+- ✅ Add comments to specific posts
+- ✅ View comments organized by post
+- ✅ Real-time comment display
 
-| 方法 | 路径 | 说明 |
-|------|------|------|
-| GET | /posts | 获取所有帖子 |
-| POST | /posts | 创建帖子 |
-| GET | /comments/{postId} | 获取帖子的评论 |
-| POST | /comments | 创建评论 |
+### User Experience
+- ✅ Clean, modern interface
+- ✅ Instant feedback for all operations
+- ✅ Error handling and user notifications
+- ✅ Cross-browser compatibility
 
-## 功能
+## Cost Estimation
 
-- ✅ 发表帖子（只需要输入名字）
-- ✅ 查看帖子列表
-- ✅ 发表评论
-- ✅ 查看帖子评论
-- ✅ 完全匿名（无需注册登录）
+Based on AWS Free Tier limits:
 
-## 成本估算
+| Service | Free Tier | Beyond Free Tier |
+|---------|-----------|------------------|
+| Lambda | 1M requests/month | $0.20/M requests |
+| API Gateway | 1M requests/month | $1.00/M requests |
+| DynamoDB | 25GB storage | $0.25/GB-month |
+| S3 | 5GB storage | $0.023/GB-month |
 
-基于 AWS 免费套餐：
+**Estimated Monthly Cost**: $0 (within free tier limits)
 
-| 服务 | 免费额度 | 超出费用 |
-|------|----------|----------|
-| Lambda | 100万次请求/月 | $0.20/百万次 |
-| API Gateway | 100万次请求/月 | $1.00/百万次 |
-| DynamoDB | 25GB存储 | $0.25/GB |
-| S3 | 5GB存储 | $0.023/GB |
+## Cleanup
 
-**预计月费用**: $0（在免费额度内）
-
-## 清理资源
-
-删除所有 AWS 资源：
+To remove all AWS resources and avoid charges:
 
 ```bash
 cd terraform
 terraform destroy
 ```
 
-## 注意事项
+Confirm with `yes` when prompted.
 
-1. 确保在 `s3-website/js/app.js` 中更新正确的 API_URL
-2. 首次部署需要打包 Lambda 函数
-3. 免费试用期间建议选择 `us-east-1` 区域
-4. 记得定期清理资源以避免费用
+## Troubleshooting
 
-## 扩展建议
+### Common Issues
 
-未来可以添加的功能：
-- 帖子搜索
-- 分页加载
-- 图片上传
-- 点赞功能
-- 管理后台
+1. **CORS Errors**: Ensure all HTTP methods have corresponding OPTIONS routes
+2. **404 Not Found**: Verify API Gateway routes include path parameters
+3. **Module Not Found**: Check Lambda function packaging includes all dependencies
+4. **Permission Denied**: Confirm IAM policies grant DynamoDB access
 
-## 许可证
+### Debugging Steps
 
-ISC
+1. Check Lambda function logs in CloudWatch
+2. Verify API Gateway configuration in AWS Console
+3. Test API endpoints directly with curl
+4. Review Terraform state and outputs
+
+## Future Enhancements
+
+Planned features for future versions:
+- [ ] User authentication and authorization
+- [ ] Post editing capabilities
+- [ ] Search functionality
+- [ ] Pagination for large datasets
+- [ ] Image uploads and media support
+- [ ] Like/vote system
+- [ ] Admin dashboard
+- [ ] Email notifications
+
+## Contributing
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Commit your changes (`git commit -m 'Add amazing feature'`)
+4. Push to the branch (`git push origin feature/amazing-feature`)
+5. Open a Pull Request
+
+## License
+
+This project is licensed under the ISC License - see the LICENSE file for details.
+
+## Acknowledgments
+
+- Built with AWS Serverless technologies
+- Uses modern JavaScript practices
+- Infrastructure managed with Terraform
+- Inspired by simple, functional web applications
