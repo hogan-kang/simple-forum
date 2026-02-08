@@ -1,0 +1,17 @@
+{
+  "name": "simple-forum",
+  "version": "1.0.0",
+  "description": "Simple forum system using AWS Lambda, S3, and DynamoDB - Minimal version",
+  "scripts": {
+    "deploy": "./scripts/deploy.sh",
+    "destroy": "cd terraform && terraform destroy",
+    "package": "./scripts/package-lambda.sh",
+    "upload": "./scripts/upload-website.sh",
+    "init": "cd terraform && terraform init",
+    "plan": "cd terraform && terraform plan",
+    "apply": "cd terraform && terraform apply"
+  },
+  "keywords": ["serverless", "aws", "lambda", "forum"],
+  "author": "",
+  "license": "ISC"
+}
